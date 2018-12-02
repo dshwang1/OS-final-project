@@ -20,6 +20,9 @@ public class Word {
 		this.onyomi = on;
 		this.kunyomi = kun;
 	}
+	public String toString() {
+		return ("Level: " + level + ", character: " + character + ", meaning: " + meaning + ", onyomi: " + onyomi + ", kunyomi: " + kunyomi);
+	}
 
 }
 

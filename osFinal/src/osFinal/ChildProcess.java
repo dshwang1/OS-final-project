@@ -1,27 +1,46 @@
 package osFinal;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ChildProcess extends RecursiveAction {
-
-	public LinkedList<Word> list;
+	private static final long serialVersionUID = 1L;
+	public LinkedList<Word> list = new LinkedList<Word>();
 	public char sortType;
+	private final Lock mlock = new ReentrantLock(true);
 	
-	public ChildProcess(LinkedList<Word> list, char sortType) {
-		this.list = list;
+	public ChildProcess(LinkedList<Word> oldList, char sortType) {
 		this.sortType = sortType;
+		mlock.lock();
+		for(Word w : oldList) {
+			this.list.add(w);
+		}
+		mlock.unlock();
 	}
 
 	@Override
 	protected void compute() {
-		this.sort();
-		this.writeToFile();
+		try {
+			this.sort();
+		} catch (NonsupportedSortByException e) {
+			System.out.println(e.getMessage());
+			System.exit(-1);
+		}
+		try {
+			this.writeToFile();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	//idea for this implementation comes from https://stackoverflow.com/questions/2784514/sort-arraylist-of-custom-objects-by-property
-	public void sort() {
+	public void sort() throws NonsupportedSortByException  {
 		switch (sortType){
 		case 'l':	//level
 			Collections.sort(list, (o1, o2) -> o1.level.compareTo(o2.level));
@@ -39,14 +58,17 @@ public class ChildProcess extends RecursiveAction {
 			Collections.sort(list, (o1, o2) -> o1.kunyomi.compareTo(o2.kunyomi));
 			break;
 		default: 
-			System.out.printf("Error: sort type (%c) not found\n", sortType);
-			break;
+			throw new NonsupportedSortByException("Error: sort type (" + sortType + ") not found. Aborting...");
 		}
 	}
 	
-	public void writeToFile() {
-		System.out.printf("writing child with sort method %c to file...\n", sortType);
+	public void writeToFile() throws IOException {
+		FileWriter result = new FileWriter("sortedBy" + sortType + ".txt");
+		for(Word w : list) {
+			result.write(w.toString() + "\n");
+		}
 		
+		result.close();
 	}
 	
 }

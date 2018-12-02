@@ -1,32 +1,29 @@
 package osFinal;
 
-//import com.wanikani.api.config.Configuration;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.io.*;
 import java.util.Scanner;
-import java.util.Collections;
 import java.util.LinkedList;
-import java.util.concurrent.*;
-
 
 public class Final {
 	
 	static LinkedList<Word> list;
+	static char[] allSortBy = {'l', 'c', 'm', 'o', 'k'};
 
 	public static void main(String[] args) throws MalformedURLException,IOException{
 		Scanner input = new Scanner(System.in);
-		System.out.println("Type your wanikani api here: ");
+		System.out.println("Type your wanikani api here: (Example api key: 536d16a72c34fa99d3c74b48829f92fd)");
 		String key = input.nextLine();
 		
 		String url = "https://www.wanikani.com/api/user/" + key + "/kanji?callback=define";
 		URL obj = new URL(url);
 		
 		//Here request and reading response codes
-		//are taken from https://www.baeldung.com/java-http-request
+		//are inspired by https://www.baeldung.com/java-http-request
 		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 		con.setRequestMethod("GET");
-
+		
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8));
 		String inputLine;
@@ -39,8 +36,15 @@ public class Final {
 		con.disconnect();
 		//end of referenced code.
 		list = trim(content.toString());
-		//printAll();
-		char[] sortTypes = new char[] {'l', 'c', 'm', 'o', 'k'};
+		System.out.println("How would you like to save the data?\nType l for by level, c for by character, m for by meaning, o for by onyomi reading, k for kunyomi reading, or a to make a seperate file for all of these");
+		System.out.println("Please type some combination of these characters: l, c, m, o, k, a");
+		char[] sortTypes = input.nextLine().replaceAll(" ", "").toCharArray();
+		for(char c : sortTypes) {
+			if(c == 'a') {
+				sortTypes = allSortBy;
+				break;
+			}
+		}
 		LinkedList<ChildProcess> children = new LinkedList<ChildProcess>();
 		for (char c : sortTypes){
 			ChildProcess child = new ChildProcess(list, c);
@@ -50,15 +54,9 @@ public class Final {
 		for(ChildProcess child : children) {
 			child.join();
 		}
-		//signal handling stuff/wait();
+		System.out.println();
 		input.close();
 		
-	}
-	
-	private static void printAll() {
-		for(Word w : list) {
-				System.out.println(w.toString());
-		}
 	}
 	
 	public static LinkedList<Word> trim(String str){
